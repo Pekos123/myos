@@ -3,13 +3,15 @@
    Many kernels provide their own assembly startup that calls into C.
 */
 OUTPUT_FORMAT("elf64-x86-64")
-ENTRY(kernel_entry)
+ENTRY(kernel_main)
 
 SECTIONS
 {
     /* Link the kernel to 1MiB physical address (common choice) */
     . = 0x00100000;
-
+    .multiboot : {
+        *(.multiboot)
+    }
     .text : {
         *(.text.entry)    /* optional explicit entry text */
         *(.text*)         /* all code */
@@ -29,9 +31,7 @@ SECTIONS
         *(COMMON)
         __bss_end = .;
     }
-    .multiboot : {
-        *(.multiboot)
-    }
+    
 
 
     /DISCARD/ : { *(.eh_frame*) }
