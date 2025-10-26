@@ -29,6 +29,10 @@ SECTIONS
         *(COMMON)
         __bss_end = .;
     }
+    .multiboot : {
+        *(.multiboot)
+    }
+
 
     /DISCARD/ : { *(.eh_frame*) }
 }

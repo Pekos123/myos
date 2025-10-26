@@ -1,3 +1,15 @@
+#define MULTIBOOT_HEADER_MAGIC 0x1BADB002
+#define MULTIBOOT_HEADER_FLAGS 0x0
+#define MULTIBOOT_HEADER_CHECKSUM -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS)
+
+__attribute__((section(".multiboot")))
+const unsigned int multiboot_header[] = {
+    MULTIBOOT_HEADER_MAGIC,
+    MULTIBOOT_HEADER_FLAGS,
+    MULTIBOOT_HEADER_CHECKSUM
+};
+
+
 #include "stdlib/print.h"
 #include "video/cursor.h"
 #include "video/coloring.h"
