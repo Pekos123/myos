@@ -1,87 +1,41 @@
-# UEFI x86_64 OS Makefile
-# Compilers
-ASM = nasm
-CC = gcc
-LD = ld
-OBJCOPY = objcopy
+CROSS_COMPILE ?= x86_64-elf-
+CC      := $(CROSS_COMPILE)gcc
+LD      := $(CROSS_COMPILE)ld
+OBJCOPY := $(CROSS_COMPILE)objcopy
 
-# Flags
-ASMFLAGS = -f elf64
-CFLAGS = -m64 -ffreestanding -fno-pie -nostdlib -nostdinc -mno-red-zone -fno-stack-protector -fno-builtin -O2
-LDFLAGS = -m elf_x86_64 -T src/linkerScript.ld -nostdlib -static
+SRCDIR  := src
+OBJDIR  := obj
+BINDIR  := bin
 
-# Directories
-BOOTLOADER_DIR = bootloader
-SRC_DIR = src
-BUILD_DIR = build
-BIN_DIR = bin
-OBJ_DIR = obj
-EFI_DIR = efi
+SOURCES := $(wildcard $(SRCDIR)/*.c)
+OBJECTS := $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(SOURCES))
 
-# Source files
-C_SOURCES = $(wildcard $(SRC_DIR)/*.c) $(wildcard $(SRC_DIR)/**/*.c)
-ASM_SOURCES = $(filter-out $(SRC_DIR)/kernel_entry.asm, $(wildcard $(SRC_DIR)/*.asm) $(wildcard $(SRC_DIR)/**/*.asm))
+LDSCRIPT := kernel.ld
 
-# Object files
-KERNEL_ENTRY_O = $(OBJ_DIR)/kernel_entry.o
-C_OBJECTS = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(C_SOURCES))
-ASM_OBJECTS = $(patsubst $(SRC_DIR)/%.asm, $(OBJ_DIR)/%.o, $(ASM_SOURCES))
+CFLAGS := -std=gnu11 -O2 -ffreestanding -fno-builtin -fno-stack-protector -Iinclude -mno-red-zone
+# Use ld's --gc-sections option directly (no -Wl,...)
+LDFLAGS := -nostdlib -static -T $(LDSCRIPT) --gc-sections
 
-# Binary files
-KERNEL_ELF = $(BUILD_DIR)/kernel.elf
-KERNEL_BIN = $(BIN_DIR)/kernel.bin
-BOOTLOADER_EFI = $(EFI_DIR)/BOOTX64.EFI
-USB_IMG = usb.img
+.PHONY: all clean dirs
 
-.PHONY: all clean dirs uefi
+all: dirs $(BINDIR)/kernel.bin
 
-all: dirs $(KERNEL_BIN)
-
-uefi: dirs $(BOOTLOADER_EFI) $(KERNEL_BIN) usb-image
-
-dirs:
-	@mkdir -p $(BUILD_DIR) $(BIN_DIR) $(OBJ_DIR) $(OBJ_DIR)/stdlib $(OBJ_DIR)/video $(EFI_DIR)
-
-$(KERNEL_ENTRY_O): $(SRC_DIR)/kernel_entry.asm
-	@echo "Assembling kernel entry..."
-	$(ASM) $(ASMFLAGS) $< -o $@
-
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	@echo "Compiling $<..."
-	@mkdir -p $(dir $@)
+$(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.asm
-	@echo "Assembling $<..."
-	@mkdir -p $(dir $@)
-	$(ASM) $(ASMFLAGS) $< -o $@
+$(BINDIR)/kernel.elf: $(OBJECTS) | $(BINDIR)
+	$(LD) $(LDFLAGS) -o $@ $(OBJECTS)
 
-$(KERNEL_ELF): $(KERNEL_ENTRY_O) $(C_OBJECTS) $(ASM_OBJECTS)
-	@echo "Linking kernel..."
-	$(LD) $(LDFLAGS) -o $@ $^
-
-$(KERNEL_BIN): $(KERNEL_ELF)
-	@echo "Creating kernel binary..."
+$(BINDIR)/kernel.bin: $(BINDIR)/kernel.elf
 	$(OBJCOPY) -O binary $< $@
 
-# Simple UEFI bootloader build
-$(BOOTLOADER_EFI): bootloader/uefi.asm
-	@echo "Building UEFI bootloader..."
-	$(ASM) -f bin bootloader/uefi.asm -o $@
-	@echo "UEFI bootloader created: $@"
+$(OBJDIR):
+	mkdir -p $(OBJDIR)
 
-# Create bootable USB image
-usb-image: $(BOOTLOADER_EFI) $(KERNEL_BIN)
-	@echo "Creating UEFI bootable USB image..."
-	@dd if=/dev/zero of=$(USB_IMG) bs=1M count=10 status=none
-	@mkfs.fat -F 32 $(USB_IMG) > /dev/null 2>&1
-	@mmd -i $(USB_IMG) ::/EFI
-	@mmd -i $(USB_IMG) ::/EFI/BOOT
-	@mcopy -i $(USB_IMG) $(BOOTLOADER_EFI) ::/EFI/BOOT/BOOTX64.EFI
-	@mcopy -i $(USB_IMG) $(KERNEL_BIN) ::/
-	@echo "USB image created: $(USB_IMG)"
+$(BINDIR):
+	mkdir -p $(BINDIR)
+
+dirs: $(OBJDIR) $(BINDIR)
 
 clean:
-	@echo "Cleaning build files..."
-	@rm -rf $(BUILD_DIR) $(BIN_DIR) $(OBJ_DIR) $(EFI_DIR) $(USB_IMG)
-	@echo "Clean complete!"
+	rm -rf $(OBJDIR) $(BINDIR)

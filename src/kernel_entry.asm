@@ -4,16 +4,16 @@ extern kernel_main
 
 section .text
 _start:
-    ; Clear direction flag
-    cld
-    
     ; Set up stack
     mov rsp, stack_top
+    
+    ; Clear direction flag
+    cld
     
     ; Call kernel main
     call kernel_main
     
-    ; If kernel returns, halt forever
+    ; Halt if kernel returns
     cli
 .halt:
     hlt
