@@ -1,0 +1,81 @@
+# Build outputs
+/build/
+/bin/
+/obj/
+/efi/
+*.elf
+*.bin
+*.o
+*.a
+*.so
+
+# USB/disk images
+*.img
+*.iso
+*.dmg
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+*.swp
+*~
+*.swo
+
+# Backup files
+*.bak
+*.backup
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+
+# Editor files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# QEMU and virtual machine files
+*.qcow2
+*.vmdk
+*.vdi
+
+# Documentation builds
+/docs/_build/
+*.pdf
+*.epub
+
+# Dependencies (if you add any later)
+/deps/
+/vendor/
+
+# Configuration files (if you have local configs)
+.config
+*.config
+
+# Kernel specific
+System.map
+vmlinux
+
+# Object file outputs
+*.ko
+*.mod
+*.mod.c
+*.mod.o
+*.o.cmd
+*.ko.cmd
+.tmp_versions/
+
+# Package files
+*.deb
+*.rpm
+*.tar.gz
+*.zip
+
+# GCC temporary files
+*.s
+*.i

@@ -1,0 +1,13 @@
+CompileFlags:
+  # For C files
+  If:
+    PathMatch: .*\.c$
+    Add: 
+      - "-std=c17"
+      - "-ffreestanding"
+  # For C++ files  
+  If:
+    PathMatch: .*\.(cpp|cc|cxx)$
+    Add: 
+      - "-std=c++20"
+      - "-ffreestanding"

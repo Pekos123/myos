@@ -1,0 +1,7 @@
+[
+  {
+    "directory": "/path/to/your/project",
+    "command": "gcc -Iinclude -Isrc -std=c11 -c src/kernel.c -o build/kernel.o",
+    "file": "src/kernel.c"
+  }
+]
